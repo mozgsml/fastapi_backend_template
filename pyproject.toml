@@ -1,0 +1,35 @@
+[project]
+name = "erp-laserwar-ru"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "alembic>=1.15.1",
+    "fastapi[standard]>=0.115.12",
+    "pydantic-settings>=2.8.1",
+    "sqlmodel>=0.0.24",
+]
+
+
+
+[tool.poe.tasks.server]
+cmd = "uv run fastapi dev app/main.py"
+help = "Run the backend DEV server"
+
+[tool.poe.tasks.alembic]
+cmd = "uv run alembic"
+help = "Generate migrations"
+
+[tool.poe.tasks.makemigrations]
+cmd = "uv run alembic revision --autogenerate"
+help = "Generate migrations"
+
+[tool.poe.tasks.migrate]
+cmd = "uv run alembic upgrade $revision"
+args = [{ name = "revision", positional = true, default = "head" }]
+help = "Apply database migrations"
+
+[tool.poe.tasks.initial-data]
+cmd = "uv run python app/initial_data.py"
+help = "Create initial data in DB"
