@@ -10,10 +10,5 @@ engine = create_async_engine(
 )
 
 
-# make sure all SQLModel models are imported (app.models) before initializing DB
-# otherwise, SQLModel might fail to initialize relationships properly
-# for more details: https://github.com/fastapi/full-stack-fastapi-template/issues/28
-
-
 async def init_db(session: AsyncSession) -> None:
     pass

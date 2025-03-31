@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from app.core.config import settings
 from app.core.logging import init_logs
 from fastapi.middleware.cors import CORSMiddleware
+from app.core.routes import router
 
 init_logs()
 logger = logging.getLogger(__name__)
@@ -35,3 +36,5 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {'status': 'ok'}
+
+app.include_router(router, prefix=settings.API_PREFIX)
