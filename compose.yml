@@ -2,15 +2,29 @@ services:
   web:
     build: .
     ports:
-      - "8000:8000"
+      - "127.0.0.1:${API_PORT:-8000}:8000"
     restart: always
     depends_on:
       db:
         condition: service_healthy
         restart: true
+      migraions:
+        condition: service_completed_successfully
     env_file:
       - .env
+    environment:
+      - POSTGRES_SERVER=db
+    command: ["fastapi", "run", "--workers", "4", "app/main.py"]
 
+  migraions:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_SERVER=db      
+    depends_on:
+      - db
+    command: ["alembic", "upgrade", "head"]
   db:
     image: postgres:16-alpine
     restart: always
