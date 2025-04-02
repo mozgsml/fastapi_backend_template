@@ -37,6 +37,10 @@ cmd = "uv run alembic upgrade $revision"
 args = [{ name = "revision", positional = true, default = "head" }]
 help = "Apply database migrations"
 
-[tool.poe.tasks.initial-data]
-cmd = "uv run python app/initial_data.py"
-help = "Create initial data in DB"
+[tool.poe.tasks.createuser]
+cmd = "uv run cli.py createuser"
+help = "Create regular user"
+
+[tool.poe.tasks.createsuperuser]
+cmd = "uv run cli.py createsuperuser"
+help = "Create regular user"
