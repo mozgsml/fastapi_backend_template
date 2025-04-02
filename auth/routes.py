@@ -65,7 +65,7 @@ async def recover_password(email: str, session: SessionDep) -> Message:
     """
     Password Recovery
     """
-    user = get_user_by_email(session=session, email=email)
+    user = await get_user_by_email(session=session, email=email)
 
     if not user:
         raise HTTPException(
@@ -116,7 +116,7 @@ async def recover_password_html_content(email: str, session: SessionDep) -> Any:
     """
     HTML Content for Password Recovery
     """
-    user = get_user_by_email(session=session, email=email)
+    user = await get_user_by_email(session=session, email=email)
 
     if not user:
         raise HTTPException(
@@ -147,6 +147,7 @@ async def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> An
     Retrieve users.
     """
 
+    # pylint: disable=not-callable
     count_statement = select(func.count()).select_from(User)
     count = (await session.exec(count_statement)).one()
 
@@ -212,7 +213,7 @@ async def update_password_me(
     """
     Update own password.
     """
-    if not verify_password(body.current_password, current_user.hashed_password):
+    if not await verify_password(body.current_password, current_user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect password")
     if body.current_password == body.new_password:
         raise HTTPException(
@@ -221,7 +222,7 @@ async def update_password_me(
     hashed_password = get_password_hash(body.new_password)
     current_user.hashed_password = hashed_password
     session.add(current_user)
-    session.commit()
+    await session.commit()
     return Message(message="Password updated successfully")
 
 
@@ -270,7 +271,7 @@ async def read_user_by_id(
     """
     Get a specific user by id.
     """
-    user = session.get(User, user_id)
+    user = await session.get(User, user_id)
     if user == current_user:
         return user
     if not current_user.is_superuser:
@@ -303,17 +304,23 @@ async def update_user_by_id(
             detail="The user with this id does not exist in the system",
         )
     if user_in.email:
-        existing_user = await get_user_by_email(session=session, email=user_in.email)
+        existing_user = await get_user_by_email(
+            session=session, email=user_in.email
+        )
         if existing_user and existing_user.id != user_id:
             raise HTTPException(
                 status_code=409, detail="User with this email already exists"
             )
 
-    db_user = update_user(session=session, db_user=db_user, user_in=user_in)
+    db_user = await update_user(
+        session=session,
+        db_user=db_user,
+        user_in=user_in
+    )
     return db_user
 
 
-@router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])
+@user_router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])
 async def delete_user(
     session: SessionDep, current_user: CurrentUser, user_id: uuid.UUID
 ) -> Message:
@@ -327,6 +334,6 @@ async def delete_user(
         raise HTTPException(
             status_code=403, detail="Super users are not allowed to delete themselves"
         )
-    session.delete(user)
+    await session.delete(user)
     await session.commit()
     return Message(message="User deleted successfully")

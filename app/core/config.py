@@ -33,9 +33,12 @@ class Settings(BaseSettings):
     )
 
     PROJECT_NAME: str
+    FRONTEND_HOST: str = "http://localhost:5173"
 
     API_PREFIX: str = "/api/v1"
     SECRET_KEY: str = secrets.token_urlsafe(32)
+    # 60 minutes * 24 hours * 8 days = 8 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8    
 
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
 
@@ -60,6 +63,22 @@ class Settings(BaseSettings):
     CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)
     ] = []
+
+    SMTP_TLS: bool = True
+    SMTP_SSL: bool = False
+    SMTP_PORT: int = 587
+    SMTP_HOST: str | None = None
+    SMTP_USER: str | None = None
+    SMTP_PASSWORD: str | None = None
+    EMAILS_FROM_EMAIL: EmailStr | None = None
+    EMAILS_FROM_NAME: EmailStr | None = None
+
+    EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def emails_enabled(self) -> bool:
+        return bool(self.SMTP_HOST and self.EMAILS_FROM_EMAIL)
 
     @computed_field  # type: ignore[prop-decorator]
     @property

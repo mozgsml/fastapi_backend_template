@@ -23,7 +23,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ALGORITHM = "HS256"
 
 
-async def create_access_token(subject: str | Any, expires_delta: timedelta) -> str:
+def create_access_token(subject: str | Any, expires_delta: timedelta) -> str:
     expire = datetime.now(timezone.utc) + expires_delta
     to_encode = {"exp": expire, "sub": str(subject)}
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
@@ -34,7 +34,7 @@ async def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-async def get_password_hash(password: str) -> str:
+def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
@@ -43,8 +43,8 @@ async def create_user(*, session: Session, user_create: UserCreate) -> User:
         user_create, update={"hashed_password": get_password_hash(user_create.password)}
     )
     session.add(db_obj)
-    session.commit()
-    session.refresh(db_obj)
+    await session.commit()
+    await session.refresh(db_obj)
     return db_obj
 
 
@@ -55,10 +55,10 @@ async def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -
         password = user_data["password"]
         hashed_password = get_password_hash(password)
         extra_data["hashed_password"] = hashed_password
-    await db_user.sqlmodel_update(user_data, update=extra_data)
+    db_user.sqlmodel_update(user_data, update=extra_data)
     session.add(db_user)
     await session.commit()
-    session.refresh(db_user)
+    await session.refresh(db_user)
     return db_user
 
 
